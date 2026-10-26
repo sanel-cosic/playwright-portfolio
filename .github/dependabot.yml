@@ -1,0 +1,46 @@
+# Dependabot keeps this project's dependencies up to date.
+# Once a week it checks for newer versions and opens a pull request for each
+# group of updates. CI then runs the full test suite on that pull request, so
+# an update is only merged after the tests prove it doesn't break anything.
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates
+
+version: 2
+updates:
+  # Helper actions used in .github/workflows (checkout, setup-node, upload-artifact)
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: Europe/Sarajevo
+    groups:
+      github-actions: # one PR for all action updates instead of one per action
+        patterns: ['*']
+    commit-message:
+      prefix: ci
+
+  # npm packages from package.json
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '07:00'
+      timezone: Europe/Sarajevo
+    ignore:
+      # Playwright is upgraded by hand: its version must match in THREE places
+      # or the browsers won't fit the library and every UI test fails:
+      #   1. package.json        "@playwright/test": "x.y.z"
+      #   2. Dockerfile          FROM mcr.microsoft.com/playwright:vx.y.z-noble
+      #   3. .github/workflows/playwright.yml   container image vx.y.z-noble
+      - dependency-name: '@playwright/test'
+      # Node types follow the Node version used in CI (22), so skip major jumps
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+    groups:
+      dev-dependencies: # minor and patch updates together in one PR
+        dependency-type: development
+        update-types: ['minor', 'patch']
+    commit-message:
+      prefix: chore(deps)
