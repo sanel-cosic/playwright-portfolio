@@ -1,0 +1,83 @@
+name: Publish Docker image
+
+# Runs AFTER the "Playwright Tests" workflow finishes on main.
+# Only a commit whose tests passed is packaged and published, so the image in
+# the registry is always a tested version of the suite.
+on:
+  workflow_run:
+    workflows: ['Playwright Tests']
+    types: [completed]
+    branches: [main]
+  workflow_dispatch: # manual "Run workflow" button in the Actions tab
+
+permissions:
+  contents: read # read the repository
+  packages: write # push to GitHub Container Registry (ghcr.io)
+
+concurrency:
+  group: publish-image # never publish two images at the same time
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build, check and publish image
+    # Publish only when the tests succeeded for a normal push (not a pull request)
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # The exact commit that was tested (for manual runs: the latest commit)
+      COMMIT: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - name: Check out the tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT }}
+
+      - name: Work out image name and tags
+        run: |
+          # Registry names must be lowercase: ghcr.io/<owner>/<repo>
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+          echo "SHORT_SHA=${COMMIT::7}" >> "$GITHUB_ENV"
+          echo "PW_VERSION=$(node -p "require('./package.json').devDependencies['@playwright/test']")" >> "$GITHUB_ENV"
+
+      - name: Build the image
+        run: |
+          docker build \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${COMMIT}" \
+            --label "org.opencontainers.image.description=Playwright test suite: SauceDemo, nIT and Restful Booker" \
+            --tag "${IMAGE}:latest" \
+            --tag "${IMAGE}:sha-${SHORT_SHA}" \
+            .
+
+      # Quick checks that the packaged suite is usable before anyone can pull it.
+      # The tests themselves already passed in the "Playwright Tests" workflow.
+      - name: Check the image before publishing
+        run: |
+          echo "Playwright inside the image:"
+          docker run --rm "${IMAGE}:sha-${SHORT_SHA}" npx playwright --version | tee pw.txt
+          grep -q "${PW_VERSION}" pw.txt || { echo "Expected Playwright ${PW_VERSION}"; exit 1; }
+          echo "Tests found inside the image:"
+          docker run --rm "${IMAGE}:sha-${SHORT_SHA}" npx playwright test --list | tail -n 1
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+
+      - name: Publish
+        run: docker push --all-tags "${IMAGE}"
+
+      - name: Write summary
+        run: |
+          {
+            echo "### Image published :whale:"
+            echo ""
+            echo "| Tag | Pull command |"
+            echo "|---|---|"
+            echo "| latest | \`docker pull ${IMAGE}:latest\` |"
+            echo "| this commit | \`docker pull ${IMAGE}:sha-${SHORT_SHA}\` |"
+            echo ""
+            echo "Run the whole suite: \`docker run --rm --ipc=host ${IMAGE}:latest\`"
+          } >> "$GITHUB_STEP_SUMMARY"
