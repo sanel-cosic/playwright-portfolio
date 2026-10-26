@@ -80,6 +80,17 @@ docker compose run --rm tests npx playwright test --project=nit-chromium
 
 Reports are written to `playwright-report/` on your machine.
 
+### Ready-made image (no setup)
+
+Every commit on `main` that passes all tests is published as a Docker image to
+GitHub Container Registry by `.github/workflows/publish-image.yml`:
+
+​```bash
+docker run --rm --ipc=host ghcr.io/sanel-cosic/playwright-portfolio:latest
+​```
+
+Tags: `latest` (newest tested version) and `sha-<commit>` (a fixed version).
+
 ## Project structure
 
 ```
