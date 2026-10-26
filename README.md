@@ -4,9 +4,7 @@ End-to-end **UI and API** test automation with **Playwright + TypeScript** acros
 applications and a REST API**, running in **Docker** and **GitHub Actions**, built with
 **Claude Code** using Playwright's planner / generator / healer agents.
 
-<!-- After the first CI run, replace YOUR-USER and add the badge:
-![Playwright Tests](https://github.com/YOUR-USER/playwright-portfolio/actions/workflows/playwright.yml/badge.svg)
--->
+[![Playwright Tests](https://github.com/sanel-cosic/playwright-portfolio/actions/workflows/playwright.yml/badge.svg?branch=main)](https://github.com/sanel-cosic/playwright-portfolio/actions/workflows/playwright.yml)
 
 | System under test | What it is | Test style |
 |---|---|---|
