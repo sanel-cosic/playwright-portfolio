@@ -1,0 +1,13 @@
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/doc/
+.auth/
+.env
+.DS_Store
+
+
+# Local copy of the nIT site files (provided by the site owner – not ours to publish)
+/nit-site/

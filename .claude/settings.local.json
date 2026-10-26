@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx playwright *)",
+      "Bash(grep -vE \"NO_COLOR|trace-warnings|^\\\\s*$|^\\\\[[0-9]+/\")",
+      "PowerShell(npm run typecheck)",
+      "Bash(rm -rf C:/Users/Sani/AppData/Local/Temp/claude/C--Projects-playwright-portfolio/03250c24-b133-4fde-8295-10cfd00e72c8/scratchpad/tr3)",
+      "Bash(mkdir -p C:/Users/Sani/AppData/Local/Temp/claude/C--Projects-playwright-portfolio/03250c24-b133-4fde-8295-10cfd00e72c8/scratchpad/tr3)",
+      "Bash(unzip -q -o \"C:/Projects/playwright-portfolio/test-results/language-Language-and-scri-9b6d4-sen-language-after-a-reload-nit-webkit-repeat3/trace.zip\")",
+      "Bash(grep -hoE '\"\\(method|apiName|title\\)\":\"[^\"]*\"|\"message\":\"\\([^\"\\\\\\\\]|\\\\\\\\.\\)*\"' *.trace)",
+      "Bash(rm -rf C:/Users/Sani/AppData/Local/Temp/claude/C--Projects-playwright-portfolio/03250c24-b133-4fde-8295-10cfd00e72c8/scratchpad/tr4)",
+      "Bash(mkdir -p C:/Users/Sani/AppData/Local/Temp/claude/C--Projects-playwright-portfolio/03250c24-b133-4fde-8295-10cfd00e72c8/scratchpad/tr4)",
+      "Bash(unzip -q -o \"C:/Projects/playwright-portfolio/test-results/language-Language-and-script-switcher-switches-to-English-nit-webkit/trace.zip\")",
+      "Bash(node -e ' *)"
+    ]
+  }
+}

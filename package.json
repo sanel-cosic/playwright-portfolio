@@ -1,0 +1,31 @@
+{
+  "name": "playwright-portfolio",
+  "version": "1.0.0",
+  "description": "End-to-end UI and API test automation with Playwright + TypeScript across two web apps and a REST API, with Docker and GitHub Actions, built with Claude Code agents.",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:saucedemo": "playwright test --project=\"saucedemo-*\"",
+    "test:nit": "playwright test --project=\"nit-*\"",
+    "test:api": "playwright test --project=api",
+    "test:chromium": "playwright test --project=\"*-chromium\"",
+    "test:headed": "playwright test --project=\"*-chromium\" --headed",
+    "test:debug": "playwright test --project=\"*-chromium\" --debug",
+    "ui-mode": "playwright test --ui",
+    "report": "playwright show-report",
+    "codegen:saucedemo": "playwright codegen https://www.saucedemo.com",
+    "codegen:nit": "playwright codegen https://nit.uganjaj.ba",
+    "typecheck": "tsc --noEmit",
+    "docker:test": "docker compose run --rm tests"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.0",
+    "@types/node": "^22.10.0",
+    "dotenv": "^16.4.7",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,16 @@
+services:
+  tests:
+    build: .
+    ipc: host # recommended by Playwright for Chromium stability
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - CI=true
+      - NIT_SITE_DIR= # always test the live nIT site in Docker (nit-site/ is not copied into the image)
+    volumes:
+      # Reports and traces land on your machine after the run
+      - ./playwright-report:/app/playwright-report
+      - ./test-results:/app/test-results
+    # Override per run, e.g.: docker compose run --rm tests npx playwright test --project=api
+    command: ["npx", "playwright", "test"]

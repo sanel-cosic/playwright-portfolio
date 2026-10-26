@@ -1,0 +1,62 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 5 * * 1-5' # weekdays 07:00 Sarajevo time – catches changes on the sites under test
+  workflow_dispatch:
+
+jobs:
+  api:
+    name: API tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright test --project=api
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-report
+          path: playwright-report/
+          retention-days: 14
+
+  ui:
+    name: UI ${{ matrix.app }} (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Same image as the Dockerfile → identical results locally and in CI
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.0-noble
+      options: --ipc=host
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [saucedemo, nit]
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright test --project=${{ matrix.app }}-${{ matrix.browser }}
+        env:
+          HOME: /root # Firefox needs this inside the container
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-report-${{ matrix.app }}-${{ matrix.browser }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
