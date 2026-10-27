@@ -11,3 +11,6 @@ node_modules/
 
 # Local copy of the nIT site files (provided by the site owner – not ours to publish)
 /nit-site/
+
+# Personal Claude Code settings (per computer)
+   .claude/settings.local.json
