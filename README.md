@@ -85,9 +85,9 @@ Reports are written to `playwright-report/` on your machine.
 Every commit on `main` that passes all tests is published as a Docker image to
 GitHub Container Registry by `.github/workflows/publish-image.yml`:
 
-​```bash
+```bash
 docker run --rm --ipc=host ghcr.io/sanel-cosic/playwright-portfolio:latest
-​```
+```
 
 Tags: `latest` (newest tested version) and `sha-<commit>` (a fixed version).
 
@@ -132,9 +132,9 @@ WebKit test kept passing only on retry. I isolated it first: subsets ran clean, 
 count would fix it. I was partly right. Load was the trigger, but traces and a network comparison showed the stall was the live site: its
 Cloudflare protection and late assets never finished under parallel requests. We made the menu step bounded and confirmed, so it can't
 hang silently. I chose to keep testing the live site, with capped workers, one retry and traces on every failure, plus a rule: check the
-first attempt's trace before rerunning."
-- **Redundant files form an older project instance** - While conducting an experiment to test the healer agent capabilities I noticed redundant files from a
-pevious version of the project structure which the agent did not notice right away. I communicated this discovery and all refferences to old files were correct
+first attempt's trace before rerunning.
+- **Redundant files from an older project instance** - While conducting an experiment to test the healer agent capabilities I noticed redundant files from a
+previous version of the project structure which the agent did not notice right away. I communicated this discovery and all references to old files were corrected
 and the experiment could proceed.
 
 ## Why Playwright over Selenium (from 8 years of QA)
