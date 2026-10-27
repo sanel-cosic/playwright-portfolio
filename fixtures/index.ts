@@ -4,6 +4,7 @@ import { LoginPage } from '../pages/saucedemo/LoginPage';
 import { InventoryPage } from '../pages/saucedemo/InventoryPage';
 import { CartPage } from '../pages/saucedemo/CartPage';
 import { CheckoutPage } from '../pages/saucedemo/CheckoutPage';
+import { ProductDetailsPage } from '../pages/saucedemo/ProductDetailsPage';
 // nIT
 import { NitHomePage } from '../pages/nit/NitHomePage';
 import { QuoteCalculator } from '../pages/nit/QuoteCalculator';
@@ -18,6 +19,7 @@ type Fixtures = {
   inventoryPage: InventoryPage;
   cartPage: CartPage;
   checkoutPage: CheckoutPage;
+  productDetailsPage: ProductDetailsPage;
   nitHome: NitHomePage;
   quote: QuoteCalculator;
   planner: PlannerPanel;
@@ -36,6 +38,7 @@ export const test = base.extend<Fixtures>({
   inventoryPage: async ({ page }, use) => use(new InventoryPage(page)),
   cartPage: async ({ page }, use) => use(new CartPage(page)),
   checkoutPage: async ({ page }, use) => use(new CheckoutPage(page)),
+  productDetailsPage: async ({ page }, use) => use(new ProductDetailsPage(page)),
   nitHome: async ({ page }, use) => use(new NitHomePage(page)),
   quote: async ({ page }, use) => use(new QuoteCalculator(page)),
   planner: async ({ page }, use) => use(new PlannerPanel(page)),
