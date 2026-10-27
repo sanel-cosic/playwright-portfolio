@@ -133,7 +133,9 @@ count would fix it. I was partly right. Load was the trigger, but traces and a n
 Cloudflare protection and late assets never finished under parallel requests. We made the menu step bounded and confirmed, so it can't
 hang silently. I chose to keep testing the live site, with capped workers, one retry and traces on every failure, plus a rule: check the
 first attempt's trace before rerunning."
-
+- **Redundant files form an older project instance** - While conducting an experiment to test the healer agent capabilities I noticed redundant files from a
+pevious version of the project structure which the agent did not notice right away. I communicated this discovery and all refferences to old files were correct
+and the experiment could proceed.
 
 ## Why Playwright over Selenium (from 8 years of QA)
 
