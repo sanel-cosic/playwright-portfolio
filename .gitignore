@@ -14,3 +14,5 @@ node_modules/
 
 # Personal Claude Code settings (per computer)
    .claude/settings.local.json
+# Snapshots and logs from the Playwright MCP browser
+/.playwright-mcp/

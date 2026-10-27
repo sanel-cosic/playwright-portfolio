@@ -11,6 +11,8 @@ export class InventoryPage {
   readonly cartLink: Locator;
   readonly cartBadge: Locator;
   readonly itemImages: Locator;
+  readonly menuButton: Locator;
+  readonly logoutLink: Locator;
 
   constructor(private readonly page: Page) {
     this.title = page.getByTestId('title');
@@ -22,6 +24,9 @@ export class InventoryPage {
     this.cartBadge = page.getByTestId('shopping-cart-badge');
     // CSS selector on purpose: each image has its own data-test id, so there is no shared test id
     this.itemImages = page.locator('img.inventory_item_img');
+    this.menuButton = page.getByRole('button', { name: 'Open Menu' });
+    // The sidebar entry is an <a> with role="button", so it is not a link to assistive tech
+    this.logoutLink = page.getByRole('button', { name: 'Logout' });
   }
 
   async goto() {
@@ -63,5 +68,10 @@ export class InventoryPage {
 
   async openCart() {
     await this.cartLink.click();
+  }
+
+  async logout() {
+    await this.menuButton.click();
+    await this.logoutLink.click();
   }
 }
