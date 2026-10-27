@@ -26,6 +26,8 @@ export const products = {
   backpack: 'Sauce Labs Backpack',
   bikeLight: 'Sauce Labs Bike Light',
   boltTShirt: 'Sauce Labs Bolt T-Shirt',
+  onesie: 'Sauce Labs Onesie',
+  redTShirt: 'Test.allTheThings() T-Shirt (Red)',
 } as const;
 
 /** Builds a unique booking payload so parallel API tests never collide. */

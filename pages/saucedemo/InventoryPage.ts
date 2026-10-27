@@ -45,6 +45,17 @@ export class InventoryPage {
     }
   }
 
+  /** Opens a product's details page by clicking its name. */
+  async openProduct(name: string) {
+    // The image is a second button with the same accessible name, so take the first (the title)
+    await this.item(name).getByRole('button', { name: `View details for ${name}` }).first().click();
+    // The details page reuses the card test ids and button names, and the URL changes before
+    // the cards are unmounted, so wait for the details-only Back button and for the list to go
+    await expect(this.page).toHaveURL(/\/inventory-item\.html\?id=\d+/);
+    await expect(this.page.getByRole('button', { name: 'Back to products' })).toBeVisible();
+    await expect(this.items).toHaveCount(1);
+  }
+
   async removeFromCart(name: string) {
     await this.item(name).getByRole('button', { name: 'Remove' }).click();
   }
