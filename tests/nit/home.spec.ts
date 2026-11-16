@@ -1,77 +1,111 @@
+// spec: specs/QAP-4.md
+// seed: tests/nit/seed.spec.ts
 import { test, expect } from '../../fixtures';
-import { nitNavigation } from '../../utils/nitData';
 
-test.describe('nIT home page', () => {
-  test('loads with title and main heading @smoke', async ({ page, nitHome }) => {
-    await nitHome.goto();
+test.describe('QAP-5 Home shell', () => {
+  test('page title and heading identify the site @smoke', async ({ nitHome, page }) => {
+    // 1. nitHome.goto('?lang=bs'). Read page title and the h1
+    await nitHome.goto('?lang=bs');
 
-    await expect(page).toHaveTitle('nIT — Web stranice i poslovni alati.');
-    // The heading contains a <br>, so check the accessible name (what screen readers announce)
-    await expect(nitHome.heading).toHaveAccessibleName('Od prvog klika do završenog posla.');
+    await expect(page).toHaveTitle('nIT — Web stranice, aplikacije i poslovni sistemi');
+    // The <em> part is a block child, so assert the accessible name instead of the text
+    await expect(nitHome.heading).toHaveAccessibleName(/Web stranice i aplikacije\.\s*Alati za vaš posao\./);
+    await expect(nitHome.projectsLink).toBeVisible();
+    await expect(nitHome.contactButton).toBeVisible();
   });
 
-  // Data-driven: every nav link must point at a section that exists on the page
-  for (const { link, section } of nitNavigation) {
-    test(`nav link "${link}" scrolls to its section`, async ({ page, nitHome }) => {
-      await nitHome.goto();
-
-      await nitHome.navLink(link).click();
-
-      await expect(page).toHaveURL(new RegExp(`#${section}$`));
-      await expect(page.locator(`#${section}`)).toBeInViewport();
-    });
-  }
-
-  test('hero process switch shows one step at a time', async ({ nitHome }) => {
-    await nitHome.goto();
-    await expect(nitHome.processButton('Kalkulacija')).toHaveAttribute('aria-pressed', 'true');
-
-    await nitHome.processButton('Plan').click();
-
-    await expect(nitHome.processButton('Plan')).toHaveAttribute('aria-pressed', 'true');
-    await expect(nitHome.processButton('Kalkulacija')).toHaveAttribute('aria-pressed', 'false');
-    await expect(nitHome.processButton('Pregled')).toHaveAttribute('aria-pressed', 'false');
-    await expect(nitHome.processDetail).toContainText('Lista naloga postaje plan rada.');
-  });
-
-  test('animation can be paused and resumed', async ({ nitHome }) => {
-    await nitHome.goto();
-    await expect(nitHome.motionToggle).toHaveText('Pauziraj animaciju');
-
-    await nitHome.motionToggle.click();
-    await expect(nitHome.motionToggle).toHaveAttribute('aria-pressed', 'true');
-    await expect(nitHome.motionToggle).toHaveText('Pokreni animaciju');
-
-    await nitHome.motionToggle.click();
-    await expect(nitHome.motionToggle).toHaveAttribute('aria-pressed', 'false');
-  });
-
-  test('page loads without script errors or broken own resources', async ({ page, nitHome, baseURL }) => {
-    const scriptErrors: string[] = [];
-    const brokenResources: string[] = [];
-    page.on('pageerror', (error) => scriptErrors.push(error.message));
-    page.on('response', (response) => {
-      // Only the site's own files – third-party hiccups are not this app's bug
-      if (response.url().startsWith(baseURL!) && response.status() >= 400) {
-        brokenResources.push(`${response.status()} ${response.url()}`);
+  test('page loads without script errors or own failed requests', async ({ nitHome, page }) => {
+    // 1. Attach listeners before goto, load the page and select each service tab once
+    const pageErrors: string[] = [];
+    const failedOwnRequests: string[] = [];
+    page.on('pageerror', error => pageErrors.push(error.message));
+    page.on('response', response => {
+      // Third-party hosts (kjtools.ba, bih.uganjaj.ba) are out of scope; 307 redirects are fine
+      if (new URL(response.url()).hostname === 'nit.uganjaj.ba' && response.status() >= 400) {
+        failedOwnRequests.push(`${response.status()} ${response.url()}`);
       }
     });
 
-    await nitHome.goto();
-    await page.waitForLoadState('networkidle');
+    await nitHome.goto('?lang=bs');
+    for (const name of [
+      'Web i katalozi proizvoda',
+      'PC i mobilne aplikacije',
+      'Poslovni proračuni i analize',
+      'Eksterni IT saradnik',
+    ] as const) {
+      await nitHome.openService(name);
+    }
 
-    expect(scriptErrors).toEqual([]);
-    expect(brokenResources).toEqual([]);
+    expect(pageErrors).toEqual([]);
+    expect(failedOwnRequests).toEqual([]);
   });
 
-  test('has no horizontal scrolling on a phone-sized screen', async ({ page, nitHome }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await nitHome.goto();
+  test('skip link moves to the main content', async ({ nitHome, page }) => {
+    await nitHome.goto('?lang=bs');
 
-    const { scrollWidth, viewportWidth } = await page.evaluate(() => ({
-      scrollWidth: document.documentElement.scrollWidth,
-      viewportWidth: window.innerWidth,
-    }));
-    expect(scrollWidth).toBeLessThanOrEqual(viewportWidth);
+    // 1. Press Tab once on a fresh load; press Enter on the skip link
+    await page.keyboard.press('Tab');
+    await expect(nitHome.skipLink).toBeFocused();
+    await page.keyboard.press('Enter');
+
+    await expect(page).toHaveURL(/#sadrzaj$/);
+    await expect(nitHome.main).toBeInViewport();
+  });
+
+  test('Projekti link scrolls to the projects section', async ({ nitHome, page }) => {
+    await nitHome.goto('?lang=bs');
+
+    // 1. Click nav link 'Projekti'
+    await nitHome.projectsLink.click();
+
+    await expect(page).toHaveURL(/#projekti$/);
+    await expect(nitHome.projectsSection).toBeInViewport();
+    await expect(nitHome.serviceTab('Web i katalozi proizvoda')).toHaveAttribute('aria-selected', 'true');
+  });
+
+  test('animation toggle pauses and resumes', async ({ nitHome }) => {
+    await nitHome.goto('?lang=bs');
+
+    // 1. Locate the animation toggle: it starts running
+    await expect(nitHome.animationToggle).toHaveAccessibleName('Pauziraj animaciju');
+    await expect(nitHome.animationToggle).toHaveAttribute('aria-pressed', 'false');
+
+    // First click pauses
+    await nitHome.animationToggle.click();
+    await expect(nitHome.animationToggle).toHaveAccessibleName('Pokreni animaciju');
+    await expect(nitHome.animationToggle).toHaveAttribute('aria-pressed', 'true');
+
+    // Second click resumes
+    await nitHome.animationToggle.click();
+    await expect(nitHome.animationToggle).toHaveAccessibleName('Pauziraj animaciju');
+    await expect(nitHome.animationToggle).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test.describe('narrow viewport', () => {
+    test.use({ viewport: { width: 390, height: 844 } });
+
+    const pages = [
+      '/?lang=bs',
+      '/konfigurator.html?lang=bs',
+      '/poslovni-sistem/kalkulacija.html?lang=bs',
+      '/poslovni-sistem/materijal.html?lang=bs',
+      '/poslovni-sistem/plan.html?lang=bs',
+      '/poslovni-sistem/proizvodnja.html?lang=bs',
+      '/poslovni-sistem/kvalitet.html?lang=bs',
+      '/poslovni-sistem/pregled.html?lang=bs',
+    ];
+
+    for (const url of pages) {
+      test(`no horizontal scroll at 390x844 on ${url}`, async ({ page }) => {
+        // 1. Load the page, wait for the heading, compare scrollWidth with innerWidth
+        await page.goto(url);
+        await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+
+        const overflow = await page.evaluate(
+          () => document.documentElement.scrollWidth - window.innerWidth,
+        );
+        expect(overflow).toBeLessThanOrEqual(0);
+      });
+    }
   });
 });
