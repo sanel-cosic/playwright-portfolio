@@ -3,13 +3,15 @@
 ## Project
 End-to-end test automation portfolio. Playwright + TypeScript. Three systems under test:
 - **SauceDemo** – https://www.saucedemo.com – demo e-commerce shop (login, cart, checkout)
-- **nIT** – https://nit.uganjaj.ba – business-tools site with interactive demos (quote
-  calculator, production planner, order overview, stock, language switcher). UI copy is
-  Bosnian by default; tests use the Bosnian texts unless they test translations.
+- **nIT** – https://nit.uganjaj.ba – business site (v2 since QAP-4): home page with services
+  tabs, contact dialog and language switcher; a window/door configurator (`/konfigurator`,
+  also embedded as an iframe on the home page); and a six-page linked business-system demo
+  under `/poslovni-sistem/` (kalkulacija, materijal, plan, proizvodnja, kvalitet, pregled).
+  UI copy is Bosnian by default; tests use the Bosnian texts unless they test translations.
 - **Restful Booker** – https://restful-booker.herokuapp.com – hotel booking REST API
 
 ## Layout
-- `pages/saucedemo/`, `pages/nit/` – Page Object Model classes, one per screen or tool panel.
+- `pages/saucedemo/`, `pages/nit/` – Page Object Model classes, one per screen or dialog (nIT business pages share `BusinessSystemPage`).
   Locators live here, never in specs.
 - `fixtures/index.ts` – custom fixtures that inject page objects and `bookingApi`.
 - `tests/saucedemo/` – shop tests (projects: saucedemo-chromium/firefox/webkit).
@@ -30,12 +32,29 @@ End-to-end test automation portfolio. Playwright + TypeScript. Three systems und
 - API tests create their own data via `newBooking()`; never depend on pre-existing records.
 - New locators go into the page object first; add a method only if two or more tests need it.
 - nIT specifics:
-  - Headings that contain `<br>` → assert with `toHaveAccessibleName`, not `toHaveText`.
-  - Collapsed sections (`<details>`) must be expanded via the page object before use.
-  - The orders table paginates (5 rows per page) – use `visibleRows`, or search first.
+  - Headings that contain `<br>` or `<em>` → assert with `toHaveAccessibleName`, not `toHaveText`.
+  - Collapsed sections (`<details>`) must be expanded via the page object before use
+    (e.g. `quotePage.openTechnology()`, `openBreakdown()`).
+  - Never click inside a hidden tab panel (Playwright waits until timeout): select the tab
+    first (`nitHome.openService(...)`). Don't scan the project panel's DOM (cross-origin iframes).
+  - Business system: state is in `localStorage` (`nit-business-system-v1`) and each test has a
+    fresh context, so tests start from the seed (orders RN-2601…RN-2608). Build state through
+    the UI with the chain fixtures `acceptedQuote` → `reservedOrder` → `plannedOrder` →
+    `workedOrder` (new order RN-2609); don't seed `localStorage`.
+  - Steps 02–05 are locked only in the step nav of page 01 (`<a aria-disabled>` without role):
+    use `lockedSteps` (`getByTitle`), not `getByRole('link')`.
+  - Dates on the business pages are relative to today: compare dates with each other, never
+    assert absolute dates. Material and price figures change: never hard-code them.
+  - Select options by their full label (e.g. machine "CNC-01 · Glodalica · 3 ose"; use
+    `planPage.chooseSlot` / `pickOrder`), never a bare short label.
+  - Use `toHaveAttribute('aria-pressed', ...)` – `toBePressed` doesn't typecheck in this
+    Playwright version.
+  - Validation is native: check `validity.valid` (page-object `isValid`), not the
+    browser-locale message text.
+  - Ignore third-party noise: kjtools.ba 404s and the THREE.js WebGL warning.
   - Don't re-implement the site's pricing/planning formulas. Assert relationships between
     the numbers on screen, explicit rules from the page, boundaries and metamorphic rules
-    (e.g. more capacity must never mean fewer orders on time).
+    (e.g. an earlier start must never finish later). Parse numbers with `parseLocalNumber`.
   - Don't assert contact details, worker names or product links – they differ between
     the live site and the owner's test build.
 
